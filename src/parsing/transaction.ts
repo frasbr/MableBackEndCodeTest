@@ -9,12 +9,10 @@ export function loadTransactionsArrayFromCSV(csv: string, accountMap: Map<string
         const toAccount = accountMap.get(toAccountId);
 
         if (!fromAccount) {
-            console.error('Error while loading transaction', { fromAccountId, toAccountId, amount });   
             throw new ValidationError(`Account ${fromAccountId} not found`);
         }
 
         if (!toAccount) {
-            console.error('Error while loading transaction', { fromAccountId, toAccountId, amount });
             throw new ValidationError(`Account ${toAccountId} not found`);
         }
 

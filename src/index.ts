@@ -1,4 +1,5 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
+import Transaction from './models/transaction';
 import { loadAccountMapFromCSV } from './parsing/account';
 import { loadTransactionsArrayFromCSV } from './parsing/transaction';
 
@@ -16,4 +17,15 @@ mkdirSync('output', { recursive: true });
 writeFileSync('output/transactions.json', JSON.stringify(transactions.map(t => t.toJSON()), null, 4));
 const accounts = Array.from(accountMap.values());
 writeFileSync('output/new_balances.json', JSON.stringify(accounts, null, 4));
-console.log('Transactions processed. See `output/` for results');
+report(transactions);
+
+function report(transactions: Transaction[]): void {
+    const failed = transactions.filter(transaction => !transaction.succeeded());
+
+    failed.forEach(transaction => {
+        console.error('Transaction failed', { transaction: transaction.toJSON() });
+    });
+
+    console.log(`Processed ${transactions.length} transactions: ${transactions.length - failed.length} completed, ${failed.length} failed`);
+    console.log('See `output/` for results');
+}

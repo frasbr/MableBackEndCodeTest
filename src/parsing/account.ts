@@ -6,17 +6,12 @@ export function loadAccountMapFromCSV(csv: string): Map<string, Account> {
 
     csv.split('\n').forEach(line => {
         const [accountId, balance] = line.split(','); // this can easily fall down
-        try {
-            const acc = new Account(accountId, parseFloat(balance));
-            if (map.has(accountId)) {
-                throw new ValidationError(`Duplicate account ID ${accountId}`);
-            }
-            map.set(accountId, acc);
-        } catch (e) {
-            console.error('Error while loading account', { accountId, balance, error: e });
-            throw e;
+        if (map.has(accountId)) {
+            throw new ValidationError(`Duplicate account ID ${accountId}`);
         }
+
+        map.set(accountId, new Account(accountId, parseFloat(balance)));
     });
-    
+
     return map;
 }

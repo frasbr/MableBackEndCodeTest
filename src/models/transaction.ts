@@ -40,7 +40,6 @@ export default class Transaction {
             this.fromAccount.transferToAccount(this.toAccount, this.transactionAmount);
             this.status = TransactionStatus.COMPLETED;
         } catch (error) {
-            console.log('Error processing transaction', { transactionId: this.id, error });
             if (error instanceof InsufficientBalanceError) {
                 this.failureMode = FailureMode.INSUFFICIENT_BALANCE;
             } else {
@@ -51,6 +50,10 @@ export default class Transaction {
             this.fromAccountUpdatedBalance = this.fromAccount.getBalance();
             this.toAccountUpdatedBalance = this.toAccount.getBalance();
         }
+    }
+
+    succeeded(): boolean {
+        return this.status === TransactionStatus.COMPLETED;
     }
 
     toJSON() {
