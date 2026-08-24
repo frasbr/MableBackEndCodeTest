@@ -1,6 +1,6 @@
-import ValidationError from "../../errors/validation-error";
-import Account from "../account";
-import Transaction from "../transaction";
+import ValidationError from "../errors/validation-error";
+import Account from "../models/account";
+import Transaction from "../models/transaction";
 
 export function loadTransactionsArrayFromCSV(csv: string, accountMap: Map<string, Account>): Transaction[] {
     return csv.split('\n').map(line => {

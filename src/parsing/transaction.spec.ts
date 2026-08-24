@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import Account from '../account';
+import Account from '../models/account';
 import { loadTransactionsArrayFromCSV } from './transaction';
 
 describe('loadTransactionsArrayFromCSV', () => {

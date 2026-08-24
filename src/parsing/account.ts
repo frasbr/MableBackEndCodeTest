@@ -1,5 +1,5 @@
-import ValidationError from "../../errors/validation-error";
-import Account from "../account";
+import ValidationError from "../errors/validation-error";
+import Account from "../models/account";
 
 export function loadAccountMapFromCSV(csv: string): Map<string, Account> {
     const map = new Map<string, Account>();

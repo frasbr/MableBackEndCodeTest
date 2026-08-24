@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
-import { loadAccountMapFromCSV } from './models/util/account';
-import { loadTransactionsArrayFromCSV } from './models/util/transaction';
+import { loadAccountMapFromCSV } from './parsing/account';
+import { loadTransactionsArrayFromCSV } from './parsing/transaction';
 
 // Read data from CSV files
 const ACCOUNT_BALANCE_CSV = readFileSync('./data/mable_account_balances.csv', 'utf8').trim();
