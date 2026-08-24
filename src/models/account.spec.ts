@@ -13,11 +13,11 @@ describe('Account model', () => {
             });
 
             it('should throw an error if the balance is not a number', () => {
-                expect(() => new Account('1234567890123456', NaN)).toThrow('Balance must be a number');
+                expect(() => new Account('1234567890123456', NaN)).toThrow('Amount must be a number');
             });
 
             it('should throw an error if the balance is negative', () => {
-                expect(() => new Account('1234567890123456', -100)).toThrow('Balance must be positive');
+                expect(() => new Account('1234567890123456', -100)).toThrow('Amount must be positive');
             });
 
             it('should create an account', () => {
@@ -27,35 +27,56 @@ describe('Account model', () => {
             });
         });
 
-        describe('addToBalance', () => {
-            it('should update balance', () => {
+        describe('debit', () => {
+            it('should reduce the balance', () => {
                 const account = new Account('1234567890123456', 100);
-                account.addToBalance(50);
-                expect(account.getBalance()).toBe(150);
+                account.debit(30);
+
+                expect(account.getBalance()).toBe(70);
+            });
+
+            it('should allow the balance to be drawn down to zero', () => {
+                const account = new Account('1234567890123456', 100);
+                account.debit(100);
+
+                expect(account.getBalance()).toBe(0);
+            });
+
+            it('should throw an error if the account has insufficient balance', () => {
+                const account = new Account('1234567890123456', 100);
+
+                expect(() => account.debit(101)).toThrow('Insufficient balance');
+                expect(account.getBalance()).toBe(100);
+            });
+
+            it('should throw an error if the amount is negative', () => {
+                const account = new Account('1234567890123456', 100);
+
+                expect(() => account.debit(-1)).toThrow('Amount must be positive');
             });
         });
 
-        describe('transferToAccount', () => {
-            it('should throw an error if the account has insufficient balance', () => {
-                const fromAccount = new Account('1234567890123456', 100);
-                const toAccount = new Account('1234567890123457', 50);
+        describe('credit', () => {
+            it('should increase the balance', () => {
+                const account = new Account('1234567890123456', 100);
+                account.credit(50);
 
-                expect(() => fromAccount.transferToAccount(toAccount, 101)).toThrow('Insufficient balance');
+                expect(account.getBalance()).toBe(150);
             });
 
-            it('should throw an error if the transaction amount is negative', () => {
-                const fromAccount = new Account('1234567890123456', 100);
-                const toAccount = new Account('1234567890123457', 50);                
-                expect(() => fromAccount.transferToAccount(toAccount, -1)).toThrow('Transfer amount must be positive');
+            it('should throw an error if the amount is negative', () => {
+                const account = new Account('1234567890123456', 100);
+
+                expect(() => account.credit(-1)).toThrow('Amount must be positive');
             });
+        });
 
-            it('should transfer funds where amount is equal to account balance', () => {
-                const fromAccount = new Account('1234567890123456', 100);
-                const toAccount = new Account('1234567890123457', 50);
-                fromAccount.transferToAccount(toAccount, 100);
-
-                expect(fromAccount.getBalance()).toBe(0);
-                expect(toAccount.getBalance()).toBe(150);
+        describe('snapshot', () => {
+            it('should describe the account without exposing it', () => {
+                expect(new Account('1234567890123456', 100).snapshot()).toEqual({
+                    accountId: '1234567890123456',
+                    balance: 100,
+                });
             });
         });
 });

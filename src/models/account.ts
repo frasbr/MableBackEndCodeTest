@@ -1,13 +1,18 @@
 import InsufficientBalanceError from "../errors/insufficient-balance-error";
 import ValidationError from "../errors/validation-error";
 
+export interface AccountSnapshot {
+    accountId: string;
+    balance: number;
+}
+
 export default class Account {
     private accountId: string;
     private balance: number;
 
     constructor(accountId: string, balance: number) {
         Account.validateAccountId(accountId);
-        Account.validateBalance(balance);
+        Account.validateAmount(balance);
 
         this.accountId = accountId;
         this.balance = balance;
@@ -21,16 +26,10 @@ export default class Account {
         return this.balance;
     }
 
-    addToBalance(amount: number): void {
-        this.balance += amount;
-    }
+    debit(amount: number): void {
+        Account.validateAmount(amount);
 
-    transferToAccount(toAccount: Account, amount: number): void {
-        if (amount < 0) {
-            throw new ValidationError('Transfer amount must be positive');
-        }
-
-        if (this.balance < amount) {
+        if (amount > this.balance) {
             throw new InsufficientBalanceError({
                 accountId: this.accountId,
                 balance: this.balance,
@@ -39,7 +38,19 @@ export default class Account {
         }
 
         this.balance -= amount;
-        toAccount.addToBalance(amount);
+    }
+
+    credit(amount: number): void {
+        Account.validateAmount(amount);
+
+        this.balance += amount;
+    }
+
+    snapshot(): AccountSnapshot {
+        return {
+            accountId: this.accountId,
+            balance: this.balance,
+        };
     }
 
     private static validateAccountId(accountId: string): void {
@@ -52,13 +63,13 @@ export default class Account {
         }
     }
 
-    private static validateBalance(balance: number): void {
-        if (isNaN(balance)) {
-            throw new ValidationError('Balance must be a number');
+    private static validateAmount(amount: number): void {
+        if (isNaN(amount)) {
+            throw new ValidationError('Amount must be a number');
         }
 
-        if (balance < 0) {
-            throw new ValidationError('Balance must be positive');
+        if (amount < 0) {
+            throw new ValidationError('Amount must be positive');
         }
     }
 }

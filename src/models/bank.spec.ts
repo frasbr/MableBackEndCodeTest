@@ -67,7 +67,7 @@ describe('Bank model', () => {
         it('should fail a transaction where something goes wrong', () => {
             const fromAccount = new Account(FROM, 100);
             const bank = new Bank([fromAccount, new Account(TO, 50)]);
-            vi.spyOn(fromAccount, 'transferToAccount').mockImplementationOnce(() => { throw new Error(); });
+            vi.spyOn(fromAccount, 'debit').mockImplementationOnce(() => { throw new Error(); });
 
             const result = bank.apply(new Transaction(FROM, TO, 20));
 
@@ -103,9 +103,12 @@ describe('Bank model', () => {
         });
     });
 
-    describe('getAccounts', () => {
-        it('should return every account it holds', () => {
-            expect(bankWith(100, 50).getAccounts().map(account => account.getAccountId())).toEqual([FROM, TO]);
+    describe('getAccountSnapshots', () => {
+        it('should describe every account it holds', () => {
+            expect(bankWith(100, 50).getAccountSnapshots()).toEqual([
+                { accountId: FROM, balance: 100 },
+                { accountId: TO, balance: 50 },
+            ]);
         });
     });
 

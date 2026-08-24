@@ -15,7 +15,7 @@ function main(): void {
     const results = bank.process(transactions);
 
     write('transactions.json', results);
-    write('new_balances.json', bank.getAccounts());
+    write('new_balances.json', bank.getAccountSnapshots());
     report(results);
 }
 

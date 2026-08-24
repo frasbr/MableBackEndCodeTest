@@ -1,6 +1,6 @@
 import InsufficientBalanceError from "../errors/insufficient-balance-error";
 import ValidationError from "../errors/validation-error";
-import Account from "./account";
+import Account, { AccountSnapshot } from "./account";
 import Transaction from "./transaction";
 import TransactionResult, { BalanceChange, FailureMode } from "./transaction-result";
 
@@ -40,7 +40,12 @@ export default class Bank {
         const toPreviousBalance = toAccount.getBalance();
 
         try {
-            fromAccount.transferToAccount(toAccount, transaction.getAmount());
+            const amount = transaction.getAmount();
+            // NOTE: For correctness sake the following operations should be in a transaction
+            // but for the current case .credit() shouldnt fail if debit has already succeeded
+            // so I'm not bothering with a transaction
+            fromAccount.debit(amount);
+            toAccount.credit(amount);
         } catch (error) {
             return TransactionResult.failed(
                 transaction,
@@ -61,14 +66,14 @@ export default class Bank {
         const account = this.accounts.get(accountId);
 
         if (!account) {
-            throw new ValidationError(`Account ${accountId} not found`);
+            throw new Error(`Account ${accountId} not found`);
         }
 
         return account.getBalance();
     }
 
-    getAccounts(): Account[] {
-        return Array.from(this.accounts.values());
+    getAccountSnapshots(): AccountSnapshot[] {
+        return Array.from(this.accounts.values(), account => account.snapshot());
     }
 
     private static balanceChange(account: Account, previousBalance: number): BalanceChange {
