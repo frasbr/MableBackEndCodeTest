@@ -1,39 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import Account from '../models/account';
-import { loadTransactionsArrayFromCSV } from './transaction';
+import { parseTransactions } from './transaction';
 
-describe('loadTransactionsArrayFromCSV', () => {
-    it('should load an array of transactions', () => {
-        const fromAccount = new Account('1234567890123456', 100);
-        const toAccount = new Account('1234567890123457', 50);
-        const accountMap = new Map([
-            [fromAccount.getAccountId(), fromAccount],
-            [toAccount.getAccountId(), toAccount],
-        ]);
+describe('parseTransactions', () => {
+    it('should load a transaction per line', () => {
         const csv = '1234567890123456,1234567890123457,25';
-
-        const transactions = loadTransactionsArrayFromCSV(csv, accountMap);
+        const transactions = parseTransactions(csv);
 
         expect(transactions).toHaveLength(1);
-        const transactionObj = transactions[0].toJSON();
-        expect(transactionObj.fromAccount.id).toBe('1234567890123456');
-        expect(transactionObj.toAccount.id).toBe('1234567890123457');
-        expect(transactionObj.amount).toBe(25);
+        expect(transactions[0].getFromAccountId()).toBe('1234567890123456');
+        expect(transactions[0].getToAccountId()).toBe('1234567890123457');
+        expect(transactions[0].getAmount()).toBe(25);
     });
 
-    it('should throw an error if the "from" account is not found', () => {
-        const toAccount = new Account('1234567890123457', 50);
-        const accountMap = new Map([[toAccount.getAccountId(), toAccount]]);
-        const csv = '1234567890123456,1234567890123457,25';
+    it('should not require the accounts to exist', () => {
+        const csv = '9999999999999999,1234567890123457,25';
 
-        expect(() => loadTransactionsArrayFromCSV(csv, accountMap)).toThrow('Account 1234567890123456 not found');
+        expect(parseTransactions(csv)).toHaveLength(1);
     });
 
-    it('should throw an error if the "to" account is not found', () => {
-        const fromAccount = new Account('1234567890123456', 100);
-        const accountMap = new Map([[fromAccount.getAccountId(), fromAccount]]);
-        const csv = '1234567890123456,1234567890123457,25';
+    it('should throw an error if a line contains an invalid amount', () => {
+        const csv = '1234567890123456,1234567890123457,notanumber';
 
-        expect(() => loadTransactionsArrayFromCSV(csv, accountMap)).toThrow('Account 1234567890123457 not found');
+        expect(() => parseTransactions(csv)).toThrow('Amount must be a number');
     });
 });

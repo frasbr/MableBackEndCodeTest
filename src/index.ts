@@ -1,23 +1,22 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import Bank from './models/bank';
-import Transaction from './models/transaction';
-import { loadAccountMapFromCSV } from './parsing/account';
-import { loadTransactionsArrayFromCSV } from './parsing/transaction';
+import TransactionResult from './models/transaction-result';
+import { parseAccounts } from './parsing/account';
+import { parseTransactions } from './parsing/transaction';
 
 const ACCOUNT_BALANCE_CSV_PATH = './data/mable_account_balances.csv';
 const TRANSACTIONS_CSV_PATH = './data/mable_transactions.csv';
 const OUTPUT_DIR = 'output';
 
 function main(): void {
-    const accountMap = loadAccountMapFromCSV(readFileSync(ACCOUNT_BALANCE_CSV_PATH, 'utf8').trim());
-    const transactions = loadTransactionsArrayFromCSV(readFileSync(TRANSACTIONS_CSV_PATH, 'utf8').trim(), accountMap);
+    const bank = new Bank(parseAccounts(readFileSync(ACCOUNT_BALANCE_CSV_PATH, 'utf8').trim()));
+    const transactions = parseTransactions(readFileSync(TRANSACTIONS_CSV_PATH, 'utf8').trim());
 
-    const bank = new Bank(accountMap);
-    bank.process(transactions);
+    const results = bank.process(transactions);
 
-    write('transactions.json', transactions);
+    write('transactions.json', results);
     write('new_balances.json', bank.getAccounts());
-    report(transactions);
+    report(results);
 }
 
 function write(fileName: string, contents: unknown): void {
@@ -25,14 +24,14 @@ function write(fileName: string, contents: unknown): void {
     writeFileSync(`${OUTPUT_DIR}/${fileName}`, JSON.stringify(contents, null, 4));
 }
 
-function report(transactions: Transaction[]): void {
-    const failed = transactions.filter(transaction => !transaction.succeeded());
+function report(results: TransactionResult[]): void {
+    const failed = results.filter(result => !result.succeeded());
 
-    failed.forEach(transaction => {
-        console.error('Transaction failed', { transaction: transaction.toJSON() });
+    failed.forEach(result => {
+        console.error('Transaction failed', { transaction: result.toJSON() });
     });
 
-    console.log(`Processed ${transactions.length} transactions: ${transactions.length - failed.length} completed, ${failed.length} failed`);
+    console.log(`Processed ${results.length} transactions: ${results.length - failed.length} completed, ${failed.length} failed`);
     console.log(`See \`${OUTPUT_DIR}/\` for results`);
 }
 
