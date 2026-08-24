@@ -1,23 +1,29 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
+import Bank from './models/bank';
 import Transaction from './models/transaction';
 import { loadAccountMapFromCSV } from './parsing/account';
 import { loadTransactionsArrayFromCSV } from './parsing/transaction';
 
-// Read data from CSV files
-const ACCOUNT_BALANCE_CSV = readFileSync('./data/mable_account_balances.csv', 'utf8').trim();
-const TRANSACTIONS_CSV = readFileSync('./data/mable_transactions.csv', 'utf8').trim();
+const ACCOUNT_BALANCE_CSV_PATH = './data/mable_account_balances.csv';
+const TRANSACTIONS_CSV_PATH = './data/mable_transactions.csv';
+const OUTPUT_DIR = 'output';
 
-// Load data into models
-const accountMap = loadAccountMapFromCSV(ACCOUNT_BALANCE_CSV);
-const transactions = loadTransactionsArrayFromCSV(TRANSACTIONS_CSV, accountMap);
+function main(): void {
+    const accountMap = loadAccountMapFromCSV(readFileSync(ACCOUNT_BALANCE_CSV_PATH, 'utf8').trim());
+    const transactions = loadTransactionsArrayFromCSV(readFileSync(TRANSACTIONS_CSV_PATH, 'utf8').trim(), accountMap);
 
-transactions.forEach(txn => txn.execute());
+    const bank = new Bank(accountMap);
+    bank.process(transactions);
 
-mkdirSync('output', { recursive: true });
-writeFileSync('output/transactions.json', JSON.stringify(transactions.map(t => t.toJSON()), null, 4));
-const accounts = Array.from(accountMap.values());
-writeFileSync('output/new_balances.json', JSON.stringify(accounts, null, 4));
-report(transactions);
+    write('transactions.json', transactions);
+    write('new_balances.json', bank.getAccounts());
+    report(transactions);
+}
+
+function write(fileName: string, contents: unknown): void {
+    mkdirSync(OUTPUT_DIR, { recursive: true });
+    writeFileSync(`${OUTPUT_DIR}/${fileName}`, JSON.stringify(contents, null, 4));
+}
 
 function report(transactions: Transaction[]): void {
     const failed = transactions.filter(transaction => !transaction.succeeded());
@@ -27,5 +33,7 @@ function report(transactions: Transaction[]): void {
     });
 
     console.log(`Processed ${transactions.length} transactions: ${transactions.length - failed.length} completed, ${failed.length} failed`);
-    console.log('See `output/` for results');
+    console.log(`See \`${OUTPUT_DIR}/\` for results`);
 }
+
+main();
